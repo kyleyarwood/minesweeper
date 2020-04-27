@@ -4,19 +4,16 @@ from PyQt5.QtWidgets import *
 from sys import argv, exit
 
 def main():
-	"""board = Board(rows=8, cols=8, num_mines=10)	
-	#board.click(0, 0)
-	print(board)
-	while not board.is_solved():
-		i, j = map(int, input('enter coords').split())
-		if not board.click(i, j):
-			print("you screwed up")
-			break
-		print(board)"""
+	rows, cols, num_mines = int(argv[1]), int(argv[2]), int(argv[3])
 	app = QApplication(argv)
-	ex = App(rows=8, cols=8)
-	exit(app.exec_())
-
+	board = Board(rows=rows, cols=cols, num_mines=num_mines)
+	ex = App(rows=rows, cols=cols, board=board)
+	#board.click(0, 0)
+	print(str(board))
+	ex.updateUI()
+	app.exec_()
+	
 
 if __name__ == "__main__":
 	main()
+

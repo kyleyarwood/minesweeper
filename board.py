@@ -55,7 +55,7 @@ class Board:
 			for j in range(col-1, col+2):
 				if (0 <= i < len(self._board) and
 					0 <= j < len(self._board[i]) and
-					self._board[i][j] == Cell.MINE):
+					self._board[i][j] in (Cell.MINE, Cell.MINE_FLAGGED)):
 					num_mines_surrounding += 1
 		self._board[row][col] = Cell(num_mines_surrounding)
 
@@ -80,6 +80,9 @@ class Board:
 			options.remove(mine)
 			self._board[mine[0]][mine[1]] = Cell.MINE
 
+	def get_board(self):
+		return self._board
+
 	def __str__(self):
 		s = ""
 		for row in self._board:
@@ -88,7 +91,9 @@ class Board:
 					s += str(col.value)
 				elif col == Cell.EMPTY:
 					s += "E"
-				else:
+				elif col == Cell.MINE:
 					s += "M"
+				else:
+					s += "F"
 			s += "\n"
 		return s[:-1]
