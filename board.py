@@ -6,19 +6,47 @@ from time import time
 class Board:
 	def __init__(self, rows: int, cols: int, num_mines: int):
 		self._first_click = True
-		self._board = [[Cell.EMPTY for row in range(rows)] 
-									for col in range(cols)]
+		self._board = [[Cell.EMPTY for col in range(cols)] 
+									for row in range(rows)]
+		self._start_time = None
+		self._end_time = None
 		self._num_mines = num_mines
+
+	def in_bounds(self, row: int, col: int) -> bool:
+		return 0 <= row < len(self._board) and 0 <= col < len(self._board[row])
+
+	def all_flagged(self, row: int, col: int) -> bool:
+		num_flags_needed = self._board[row][col].value
+		for i in range(row-1, row+2):
+			for j in range(col-1, col+2):
+				if not self.in_bounds(i, j):
+					continue
+				if self._board[i][j] in (Cell.EMPTY_FLAGGED, Cell.MINE_FLAGGED):
+					num_flags_needed -= 1
+		return num_flags_needed == 0
+
+	def clear(self, row: int, col: int) -> bool:
+		for i in range(row-1, row+2):
+			for j in range(col-1, col+2):
+				if not self.in_bounds(i, j):
+					continue
+				if self._board[i][j] in (Cell.EMPTY, Cell.MINE):
+					if not self.click(i, j):
+						return False
+		return True
+
+	def total_time(self):
+		return self._end_time - self._start_time
 
 	def click(self, row: int, col: int) -> bool:
 		if self._first_click:
-			start = time()
+			self._start_time = time()
 			self._first_click = False
 			self._generate_board(row, col)
 		visited = set()
 		clicked_mine = self._dfs(row, col, visited)
-		if self.is_solved():
-			end = time()
+		if self.is_solved() and self._end_time is None:
+			self._end_time = time()
 		return clicked_mine
 
 	def flag(self, row: int, col: int) -> None:
