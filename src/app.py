@@ -40,7 +40,7 @@ class App(QWidget):
 			board_row = []
 			for j in range(self.cols):
 				label = QLabel(self)
-				pixmap = QPixmap('img/facingDown.png')
+				pixmap = QPixmap('../img/facingDown.png')
 				sf = self._scaling_factor()
 				pixmap = pixmap.scaledToWidth(sf).scaledToHeight(sf)
 				label.setPixmap(pixmap)
@@ -68,13 +68,13 @@ class App(QWidget):
 	def _get_pixmap(self, cell: str = 'E') -> QPixmap:
 		pixmap = None
 		if cell == 'E' or cell == 'M':
-			pixmap = QPixmap('img/facingDown.png')
+			pixmap = QPixmap('../img/facingDown.png')
 		elif cell in map(str, range(9)):
-			pixmap = QPixmap('img/' + cell + '.png')
+			pixmap = QPixmap('../img/' + cell + '.png')
 		elif cell == 'F':
-			pixmap = QPixmap('img/flagged.png')
+			pixmap = QPixmap('../img/flagged.png')
 		else:
-			pixmap = QPixmap('img/facingDown.png')
+			pixmap = QPixmap('../img/facingDown.png')
 		sf = self._scaling_factor()
 		pixmap = pixmap.scaledToWidth(sf).scaledToHeight(sf)
 		return pixmap
@@ -125,7 +125,7 @@ class App(QWidget):
 			self.display_win()
 
 	def display_win(self):
-		t = self.board.total_time()
+		t = round(self.board.total_time(), 2)
 		win_alert = QMessageBox(self.window)
 		win_alert.setText("You've won! " + str(t))
 		if (str((self.rows, self.cols, self.num_mines)) not in self.hi_scores or
