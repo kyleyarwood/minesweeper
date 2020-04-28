@@ -12,6 +12,9 @@ class Board:
 		self._end_time = None
 		self._num_mines = num_mines
 
+	def end_game(self):
+		self._end_time = time()
+
 	def in_bounds(self, row: int, col: int) -> bool:
 		return 0 <= row < len(self._board) and 0 <= col < len(self._board[row])
 
@@ -45,8 +48,6 @@ class Board:
 			self._generate_board(row, col)
 		visited = set()
 		clicked_mine = self._dfs(row, col, visited)
-		if self.is_solved() and self._end_time is None:
-			self._end_time = time()
 		return clicked_mine
 
 	def flag(self, row: int, col: int) -> None:

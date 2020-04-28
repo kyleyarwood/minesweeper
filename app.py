@@ -3,15 +3,18 @@ from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from board import Board
 
 class App(QWidget):
-	def __init__(self, rows, cols, board):
+	def __init__(self, rows, cols, num_mines, board):
 		self.WINDOW_BAR_HEIGHT = 23
+		self.WINDOW_WIDTH = 8
 		super().__init__()
+		self.game_over = False
 		self.rows = rows
 		self.cols = cols
+		self.num_mines = num_mines
 		self.title = 'Minesweeper'
-		self.left = 10
-		self.top = 10
-		self.width = 1080
+		self.left = 0
+		self.top = 0
+		self.width = 1440
 		self.height = 720
 		self.board_labels = []
 		self.board = board
@@ -20,8 +23,13 @@ class App(QWidget):
 
 	def initUI(self) -> None:
 		self.setWindowTitle(self.title)
-		self.setGeometry(self.left, self.top, self.width, self.height)
+		self.setGeometry(self.left, self.top, self.width, self.height+30)
+		self.window.setFocus()
+		self.window.setLayout(self.init_layout())
+		self.show()
 
+	def init_layout(self):
+		self.board = Board(rows=self.rows, cols=self.cols, num_mines=self.num_mines)
 		layout = QVBoxLayout()
 		layout.setSpacing(0)
 		for i in range(self.rows):
@@ -38,11 +46,17 @@ class App(QWidget):
 				board_row.append(label)
 			layout.addLayout(hlayout)
 			self.board_labels.append(board_row)
-
+		
+		layout.addWidget(self.restart_button())
 		layout.setContentsMargins(0, 0, 0, 0)
-		self.window.setFocus()
-		self.window.setLayout(layout)
-		self.show()
+		self.updateUI()
+		self.game_over = False
+		return layout
+
+	def restart_button(self):
+		button = QPushButton('Restart', self)
+		button.clicked.connect(self.init_layout)
+		return button
 
 	def _get_pixmap(self, cell: str = 'E') -> QPixmap:
 		pixmap = None
@@ -61,23 +75,31 @@ class App(QWidget):
 	def _scaling_factor(self):
 		return min(self.width, self.height)//max(self.rows, self.cols)
 
-	def mousePressEvent(self, event):
+	def mouseReleaseEvent(self, event):
+		if self.game_over:
+			return
 		x, y = self._get_hovering_cell(QCursor.pos(), self.pos())
 		if not self.board.in_bounds(y, x):
 			return
 		if event.button() == 1:
-			self.board.click(y, x)
+			if not self.board.click(y, x):
+				self.game_over = True
+				self.display_game_over()
 		else:
 			self.board.flag(y, x)
 		self.updateUI()
 		if self.board.is_solved():
-			print("You've won! " + str(self.board.total_time()))
+			self.game_over = True
+			self.board.end_game()
+			self.display_win()
 
 	def _get_hovering_cell(self, cursor_pos, window_pos):
 		sf = self._scaling_factor()
-		return (cursor_pos.x() - window_pos.x())//sf, (cursor_pos.y() - self.WINDOW_BAR_HEIGHT - window_pos.y())//sf
+		return (cursor_pos.x() - self.WINDOW_WIDTH - window_pos.x())//sf, (cursor_pos.y() - self.WINDOW_BAR_HEIGHT - window_pos.y())//sf
 
 	def keyPressEvent(self, event):
+		if self.game_over:
+			return
 		x, y = self._get_hovering_cell(QCursor.pos(), self.pos())
 		if not self.board.in_bounds(y, x):
 			return
@@ -86,10 +108,24 @@ class App(QWidget):
 			if cell in ('E', 'M', 'F'):
 				self.board.flag(y, x)
 			elif cell in map(str, range(9)) and self.board.all_flagged(y, x):
-				self.board.clear(y, x)
+				if not self.board.clear(y, x):
+					self.game_over = True
+					self.display_game_over()
 		self.updateUI()
 		if self.board.is_solved():
-			print("You've won! " + str(self.board.total_time()))
+			self.board.end_game()
+			self.game_over = True
+			self.display_win()
+
+	def display_win(self):
+		win_alert = QMessageBox(self.window)
+		win_alert.setText("You've won! " + str(self.board.total_time()))
+		win_alert.exec_()
+
+	def display_game_over(self):
+		game_over_alert = QMessageBox(self.window)
+		game_over_alert.setText("You've lost!")
+		game_over_alert.exec_()
 
 	def updateUI(self) -> None:
 		board_encoding = str(self.board)
