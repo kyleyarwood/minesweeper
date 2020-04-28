@@ -61,7 +61,7 @@ class Board:
 			self._board[row][col] = Cell.MINE
 
 	def is_solved(self):
-		return all(all(c != Cell.EMPTY for c in row) for row in self._board)
+		return all(all(c not in (Cell.EMPTY, Cell.EMPTY_FLAGGED) for c in row) for row in self._board)
 
 	def _dfs(self, row: int, col: int, visited: Set) -> bool:
 		if self._board[row][col] == Cell.MINE:

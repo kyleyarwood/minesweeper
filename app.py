@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from board import Board
+from json import dumps
 
 class App(QWidget):
-	def __init__(self, rows, cols, num_mines, board):
+	def __init__(self, rows, cols, num_mines, hi_scores):
 		self.WINDOW_BAR_HEIGHT = 23
 		self.WINDOW_WIDTH = 8
 		super().__init__()
@@ -11,13 +12,14 @@ class App(QWidget):
 		self.rows = rows
 		self.cols = cols
 		self.num_mines = num_mines
+		self.hi_scores = hi_scores
 		self.title = 'Minesweeper'
 		self.left = 0
 		self.top = 0
 		self.width = 1440
 		self.height = 720
 		self.board_labels = []
-		self.board = board
+		self.board = None
 		self.window = QWidget(self)
 		self.initUI()
 
@@ -53,9 +55,14 @@ class App(QWidget):
 		self.game_over = False
 		return layout
 
+	def restart_board(self):
+		self.board = Board(rows=self.rows, cols=self.cols, num_mines=self.num_mines)
+		self.game_over = False
+		self.updateUI()
+
 	def restart_button(self):
 		button = QPushButton('Restart', self)
-		button.clicked.connect(self.init_layout)
+		button.clicked.connect(self.restart_board)
 		return button
 
 	def _get_pixmap(self, cell: str = 'E') -> QPixmap:
@@ -118,9 +125,19 @@ class App(QWidget):
 			self.display_win()
 
 	def display_win(self):
+		t = self.board.total_time()
 		win_alert = QMessageBox(self.window)
-		win_alert.setText("You've won! " + str(self.board.total_time()))
+		win_alert.setText("You've won! " + str(t))
+		if (str((self.rows, self.cols, self.num_mines)) not in self.hi_scores or
+			self.hi_scores[str((self.rows, self.cols, self.num_mines))] > t):
+			self.hi_scores[str((self.rows, self.cols, self.num_mines))] = t
+			self.write_hi_scores()
+			win_alert.setText("You've won! NEW HI SCORE! " + str(t))
 		win_alert.exec_()
+
+	def write_hi_scores(self):
+		with open('hi_scores.json', 'w') as f:
+			f.write(dumps(self.hi_scores))
 
 	def display_game_over(self):
 		game_over_alert = QMessageBox(self.window)
@@ -132,3 +149,4 @@ class App(QWidget):
 		for i, board_row in enumerate(board_encoding.split('\n')):
 			for j, cell in enumerate(board_row):
 				self.board_labels[i][j].setPixmap(self._get_pixmap(cell))
+				self.board_labels[i][j].repaint()
