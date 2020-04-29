@@ -2,9 +2,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from board import Board
 from json import dumps
+from statistics import mean
 
 class App(QWidget):
-    def __init__(self, rows, cols, num_mines, hi_scores):
+    def __init__(self, rows, cols, num_mines, stats):
         self.WINDOW_BAR_HEIGHT = 23
         self.WINDOW_WIDTH = 8
         super().__init__()
@@ -12,7 +13,7 @@ class App(QWidget):
         self.rows = rows
         self.cols = cols
         self.num_mines = num_mines
-        self.hi_scores = hi_scores
+        self.stats = stats
         self.title = 'Minesweeper'
         self.left = 0
         self.top = 0
@@ -50,6 +51,7 @@ class App(QWidget):
             self.board_labels.append(board_row)
         
         layout.addWidget(self.restart_button())
+        layout.addWidget(self.stats_button())
         layout.setContentsMargins(0, 0, 0, 0)
         self.updateUI()
         self.game_over = False
@@ -64,6 +66,25 @@ class App(QWidget):
         button = QPushButton('Restart', self)
         button.clicked.connect(self.restart_board)
         return button
+
+    def stats_button(self):
+        button = QPushButton('Show My Stats', self)
+        button.clicked.connect(self.show_stats)
+        return button
+
+    def show_stats(self):
+        stats_alert = QMessageBox(self.window)
+        stats = self.get_stats()
+        stats_alert.setText(stats)
+        stats_alert.exec_()
+
+    def get_stats(self):
+        mode = self.get_mode()
+        stats = "Attempts: " + str(self.stats[mode]['attempts']) + "\n"
+        stats += "Win rate: " + str(round(100*self.stats[mode]['solved']/self.stats[mode]['attempts'], 2)) + "%\n"
+        stats += "Fastest time: " + str(min(self.stats[mode]['times'])) + "s\n"
+        stats += "Average time: " + str(round(mean(self.stats[mode]['times']), 2)) + "s\n"
+        return stats        
 
     def _get_pixmap(self, cell: str = 'E') -> QPixmap:
         pixmap = None
@@ -128,21 +149,37 @@ class App(QWidget):
         t = round(self.board.total_time(), 2)
         win_alert = QMessageBox(self.window)
         win_alert.setText("You've won! " + str(t))
-        if (str((self.rows, self.cols, self.num_mines)) not in self.hi_scores or
-            self.hi_scores[str((self.rows, self.cols, self.num_mines))] > t):
-            self.hi_scores[str((self.rows, self.cols, self.num_mines))] = t
-            self.write_hi_scores()
+        mode = str((self.rows, self.cols, self.num_mines))
+        if mode not in self.stats:
+            self.add_mode(mode)
+        self.stats[mode]['times'].append(t)
+        self.stats[mode]['attempts'] += 1
+        self.stats[mode]['solved'] += 1
+        self.write_stats()
+        if t == min(self.stats[mode]['times']):
             win_alert.setText("You've won! NEW HI SCORE! " + str(t))
         win_alert.exec_()
 
-    def write_hi_scores(self):
-        with open('hi_scores.json', 'w') as f:
-            f.write(dumps(self.hi_scores))
+    def add_mode(self, mode: str):
+        mode_stats = {'times': [], 'attempts': 0, 'solved': 0}
+        self.stats[mode] = mode_stats
+
+    def write_stats(self):
+        with open('stats.json', 'w') as f:
+            f.write(dumps(self.stats))
 
     def display_game_over(self):
         game_over_alert = QMessageBox(self.window)
         game_over_alert.setText("You've lost!")
+        mode = self.get_mode()
+        if mode not in self.stats:
+            self.add_mode(mode)
+        self.stats[mode]['attempts'] += 1
+        self.write_stats()
         game_over_alert.exec_()
+
+    def get_mode(self) -> str:
+        return str((self.rows, self.cols, self.num_mines))
 
     def updateUI(self) -> None:
         board_encoding = str(self.board)

@@ -3,20 +3,20 @@ from PyQt5.QtWidgets import *
 from sys import argv, exit
 from json import load
 
-def get_hi_scores():
-    with open('hi_scores.json', 'r') as f:
+def get_stats():
+    with open('stats.json', 'r') as f:
         return load(f)
 
 def main():
-    hi_scores = get_hi_scores()
-    print(hi_scores)
+    stats = get_stats()
+    print(stats)
     try:
         rows, cols, num_mines = int(argv[1]), int(argv[2]), int(argv[3])
     except:
         rows = cols = 8
         num_mines = 10
     app = QApplication(argv)
-    ex = App(rows=rows, cols=cols, num_mines=num_mines, hi_scores=hi_scores)
+    ex = App(rows=rows, cols=cols, num_mines=num_mines, stats=stats)
     app.exec_()
     
     
