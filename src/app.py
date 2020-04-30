@@ -69,6 +69,7 @@ class App(QWidget):
 
     def stats_button(self):
         button = QPushButton('Show My Stats', self)
+        button.setWindowTitle('My Stats')
         button.clicked.connect(self.show_stats)
         return button
 
@@ -80,10 +81,19 @@ class App(QWidget):
 
     def get_stats(self):
         mode = self.get_mode()
+
+        if mode not in self.stats:
+            return "No stats for this mode yet"        
+
         stats = "Attempts: " + str(self.stats[mode]['attempts']) + "\n"
         stats += "Win rate: " + str(round(100*self.stats[mode]['solved']/self.stats[mode]['attempts'], 2)) + "%\n"
-        stats += "Fastest time: " + str(min(self.stats[mode]['times'])) + "s\n"
-        stats += "Average time: " + str(round(mean(self.stats[mode]['times']), 2)) + "s\n"
+        if not self.stats[mode]['times']:
+            stats += "No minimum or average times yet\n"
+        else:
+            stats += "Fastest time: " + str(min(self.stats[mode]['times'])) + "s\n"
+            stats += "Average time: " + str(round(mean(self.stats[mode]['times']), 2)) + "s\n"
+        stats += "Longest win streak: " + str(self.stats[mode]['longest_win_streak']) + "\n"
+        stats += "Current win streak: " + str(self.stats[mode]['current_win_streak']) + "\n"
         return stats        
 
     def _get_pixmap(self, cell: str = 'E') -> QPixmap:
@@ -155,13 +165,17 @@ class App(QWidget):
         self.stats[mode]['times'].append(t)
         self.stats[mode]['attempts'] += 1
         self.stats[mode]['solved'] += 1
+        self.stats[mode]['current_win_streak'] += 1
+        self.stats[mode]['longest_win_streak'] = max(
+                self.stats[mode]['longest_win_streak'], 
+                self.stats[mode]['current_win_streak'])
         self.write_stats()
         if t == min(self.stats[mode]['times']):
             win_alert.setText("You've won! NEW HI SCORE! " + str(t))
         win_alert.exec_()
 
     def add_mode(self, mode: str):
-        mode_stats = {'times': [], 'attempts': 0, 'solved': 0}
+        mode_stats = {'times': [], 'attempts': 0, 'solved': 0, 'longest_win_streak': 0, 'current_win_streak': 0}
         self.stats[mode] = mode_stats
 
     def write_stats(self):
@@ -175,6 +189,7 @@ class App(QWidget):
         if mode not in self.stats:
             self.add_mode(mode)
         self.stats[mode]['attempts'] += 1
+        self.stats[mode]['current_win_streak'] = 0
         self.write_stats()
         game_over_alert.exec_()
 
