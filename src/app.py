@@ -49,7 +49,7 @@ class App(QWidget):
                 board_row.append(label)
             layout.addLayout(hlayout)
             self.board_labels.append(board_row)
-        
+
         layout.addWidget(self.restart_button())
         layout.addWidget(self.stats_button())
         layout.setContentsMargins(0, 0, 0, 0)
@@ -83,7 +83,7 @@ class App(QWidget):
         mode = self.get_mode()
 
         if mode not in self.stats:
-            return "No stats for this mode yet"        
+            return "No stats for this mode yet"
 
         stats = "Attempts: " + str(self.stats[mode]['attempts']) + "\n"
         stats += "Win rate: " + str(round(100*self.stats[mode]['solved']/self.stats[mode]['attempts'], 2)) + "%\n"
@@ -94,7 +94,7 @@ class App(QWidget):
             stats += "Average time: " + str(round(mean(self.stats[mode]['times']), 2)) + "s\n"
         stats += "Longest win streak: " + str(self.stats[mode]['longest_win_streak']) + "\n"
         stats += "Current win streak: " + str(self.stats[mode]['current_win_streak']) + "\n"
-        return stats        
+        return stats
 
     def _get_pixmap(self, cell: str = 'E') -> QPixmap:
         pixmap = None
@@ -167,7 +167,7 @@ class App(QWidget):
         self.stats[mode]['solved'] += 1
         self.stats[mode]['current_win_streak'] += 1
         self.stats[mode]['longest_win_streak'] = max(
-                self.stats[mode]['longest_win_streak'], 
+                self.stats[mode]['longest_win_streak'],
                 self.stats[mode]['current_win_streak'])
         self.write_stats()
         if t == min(self.stats[mode]['times']):
