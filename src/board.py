@@ -123,9 +123,6 @@ class Board:
             options.remove(mine)
             self._board[mine[0]][mine[1]] = Cell.MINE
 
-    def get_board(self):
-        return self._board
-
     def __str__(self):
         s = ""
         for row in self._board:

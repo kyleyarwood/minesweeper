@@ -167,7 +167,7 @@ class App(QWidget):
         if self.game_over:
             self.timer.stop()
             return
-        self.timer_label.display(floor(time() - self.board._start_time))
+        self.timer_label.display(floor(time() - self.board.get_start_time()))
 
     def _get_hovering_cell(self, cursor_pos, window_pos):
         sf = self._scaling_factor()
