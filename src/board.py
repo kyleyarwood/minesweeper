@@ -11,6 +11,7 @@ class Board:
         self._start_time = None
         self._end_time = None
         self._num_mines = num_mines
+        self._flags_left = num_mines
 
     def end_game(self):
         self._end_time = time()
@@ -50,15 +51,22 @@ class Board:
         clicked_mine = self._dfs(row, col, visited)
         return clicked_mine
 
+    def get_flags_left(self) -> int:
+        return self._flags_left
+
     def flag(self, row: int, col: int) -> None:
         if self._board[row][col] == Cell.EMPTY:
             self._board[row][col] = Cell.EMPTY_FLAGGED
+            self._flags_left -= 1
         elif self._board[row][col] == Cell.EMPTY_FLAGGED:
             self._board[row][col] = Cell.EMPTY
+            self._flags_left += 1
         elif self._board[row][col] == Cell.MINE:
             self._board[row][col] = Cell.MINE_FLAGGED
+            self._flags_left -= 1
         elif self._board[row][col] == Cell.MINE_FLAGGED:
             self._board[row][col] = Cell.MINE
+            self._flags_left += 1
 
     def is_solved(self):
         return all(all(c not in (Cell.EMPTY, Cell.EMPTY_FLAGGED) for c in row) for row in self._board)

@@ -9,7 +9,6 @@ def get_stats():
 
 def main():
     stats = get_stats()
-    print(stats)
     try:
         rows, cols, num_mines = int(argv[1]), int(argv[2]), int(argv[3])
     except:

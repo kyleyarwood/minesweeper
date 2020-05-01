@@ -17,9 +17,10 @@ class App(QWidget):
         self.title = 'Minesweeper'
         self.left = 0
         self.top = 0
-        self.width = 1440
-        self.height = 720
+        self.width = 800
+        self.height = 640
         self.board_labels = []
+        self.flags_left_label = None
         self.board = None
         self.window = QWidget(self)
         self.initUI()
@@ -31,9 +32,19 @@ class App(QWidget):
         self.window.setLayout(self.init_layout())
         self.show()
 
+    def set_flags_left_label(self):
+        self.flags_left_label = QLCDNumber(self)
+        self.flags_left_label.setFixedHeight(60)
+        self.WINDOW_BAR_HEIGHT += 60
+        self.flags_left_label.setFixedWidth(120)
+        self.flags_left_label.setStyleSheet("QLCDNumber {background-color:black; color:blue;}")
+        self.flags_left_label.display(self.board.get_flags_left())
+
     def init_layout(self):
         self.board = Board(rows=self.rows, cols=self.cols, num_mines=self.num_mines)
         layout = QVBoxLayout()
+        self.set_flags_left_label()
+        layout.addWidget(self.flags_left_label)
         layout.setSpacing(0)
         for i in range(self.rows):
             hlayout = QHBoxLayout()
@@ -69,7 +80,6 @@ class App(QWidget):
 
     def stats_button(self):
         button = QPushButton('Show My Stats', self)
-        button.setWindowTitle('My Stats')
         button.clicked.connect(self.show_stats)
         return button
 
@@ -77,6 +87,7 @@ class App(QWidget):
         stats_alert = QMessageBox(self.window)
         stats = self.get_stats()
         stats_alert.setText(stats)
+        stats_alert.setWindowTitle('My Stats')
         stats_alert.exec_()
 
     def get_stats(self):
@@ -111,7 +122,7 @@ class App(QWidget):
         return pixmap
 
     def _scaling_factor(self):
-        return min(self.width, self.height)//max(self.rows, self.cols)
+        return min(self.width, self.height-100)//max(self.rows, self.cols)
 
     def mouseReleaseEvent(self, event):
         if self.game_over:
@@ -198,6 +209,7 @@ class App(QWidget):
 
     def updateUI(self) -> None:
         board_encoding = str(self.board)
+        self.flags_left_label.display(self.board.get_flags_left())
         for i, board_row in enumerate(board_encoding.split('\n')):
             for j, cell in enumerate(board_row):
                 self.board_labels[i][j].setPixmap(self._get_pixmap(cell))
