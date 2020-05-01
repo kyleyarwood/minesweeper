@@ -1,8 +1,11 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
+from PyQt5.QtCore import QTimer
 from board import Board
 from json import dumps
 from statistics import mean
+from time import time
+from math import floor
 
 class App(QWidget):
     def __init__(self, rows, cols, num_mines, stats):
@@ -21,6 +24,8 @@ class App(QWidget):
         self.height = 640
         self.board_labels = []
         self.flags_left_label = None
+        self.timer_label = None
+        self.timer = None
         self.board = None
         self.window = QWidget(self)
         self.initUI()
@@ -40,11 +45,22 @@ class App(QWidget):
         self.flags_left_label.setStyleSheet("QLCDNumber {background-color:black; color:blue;}")
         self.flags_left_label.display(self.board.get_flags_left())
 
+    def set_timer_label(self):
+        self.timer_label = QLCDNumber(self)
+        self.timer_label.setFixedHeight(60)
+        self.timer_label.setFixedWidth(120)
+        self.timer_label.setStyleSheet("QLCDNumber {background-color:black; color:red;}")
+        self.flags_left_label.display(0)
+
     def init_layout(self):
         self.board = Board(rows=self.rows, cols=self.cols, num_mines=self.num_mines)
         layout = QVBoxLayout()
         self.set_flags_left_label()
-        layout.addWidget(self.flags_left_label)
+        self.set_timer_label()
+        top_layout = QHBoxLayout()
+        top_layout.addWidget(self.flags_left_label)
+        top_layout.addWidget(self.timer_label)
+        layout.addLayout(top_layout)
         layout.setSpacing(0)
         for i in range(self.rows):
             hlayout = QHBoxLayout()
@@ -70,6 +86,7 @@ class App(QWidget):
 
     def restart_board(self):
         self.board = Board(rows=self.rows, cols=self.cols, num_mines=self.num_mines)
+        self.timer_label.display(0)
         self.game_over = False
         self.updateUI()
 
@@ -131,6 +148,10 @@ class App(QWidget):
         if not self.board.in_bounds(y, x):
             return
         if event.button() == 1:
+            if self.board.is_first_click():
+                self.timer = QTimer(self)
+                self.timer.timeout.connect(self.update_time)
+                self.timer.start(100)
             if not self.board.click(y, x):
                 self.game_over = True
                 self.display_game_over()
@@ -141,6 +162,12 @@ class App(QWidget):
             self.game_over = True
             self.board.end_game()
             self.display_win()
+
+    def update_time(self):
+        if self.game_over:
+            self.timer.stop()
+            return
+        self.timer_label.display(floor(time() - self.board._start_time))
 
     def _get_hovering_cell(self, cursor_pos, window_pos):
         sf = self._scaling_factor()

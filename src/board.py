@@ -16,6 +16,12 @@ class Board:
     def end_game(self):
         self._end_time = time()
 
+    def get_start_time(self):
+        return self._start_time
+
+    def is_first_click(self) -> bool:
+        return self._first_click
+
     def in_bounds(self, row: int, col: int) -> bool:
         return 0 <= row < len(self._board) and 0 <= col < len(self._board[row])
 
