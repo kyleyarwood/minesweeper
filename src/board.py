@@ -124,16 +124,16 @@ class Board:
             self._board[mine[0]][mine[1]] = Cell.MINE
 
     def __str__(self):
-        s = ""
+        result = []
         for row in self._board:
             for col in row:
                 if 0 <= col.value < 9:
-                    s += str(col.value)
+                    result.append(str(col.value))
                 elif col == Cell.EMPTY:
-                    s += "E"
+                    result.append("E")
                 elif col == Cell.MINE:
-                    s += "M"
+                    result.append("M")
                 else:
-                    s += "F"
-            s += "\n"
-        return s[:-1]
+                    result.append("F")
+            result.append("\n")
+        return ''.join(result)[:-1]
