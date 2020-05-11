@@ -20,8 +20,8 @@ class App(QWidget):
         self.title = 'Minesweeper'
         self.left = 0
         self.top = 0
-        self.width = 800
-        self.height = 640
+        self.width = 1440
+        self.height = 720
         self.board_labels = []
         self.flags_left_label = None
         self.timer_label = None
@@ -85,6 +85,8 @@ class App(QWidget):
         return layout
 
     def restart_board(self):
+        self.timer.timeout.connect(self.update_time)
+        self.timer.timeout.disconnect()
         self.board = Board(rows=self.rows, cols=self.cols, num_mines=self.num_mines)
         self.timer_label.display(0)
         self.game_over = False
@@ -139,7 +141,7 @@ class App(QWidget):
         return pixmap
 
     def _scaling_factor(self):
-        return min(self.width, self.height-100)//max(self.rows, self.cols)
+        return min(self.width//self.cols, (self.height-100)//self.rows)
 
     def mouseReleaseEvent(self, event):
         if self.game_over:
