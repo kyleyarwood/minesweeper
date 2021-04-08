@@ -93,13 +93,7 @@ class Board:
         return True
 
     def _set_mines_surrounding(self, row: int, col: int) -> None:
-        num_mines_surrounding = 0
-        for i in range(row-1, row+2):
-            for j in range(col-1, col+2):
-                if (0 <= i < len(self._board) and
-                    0 <= j < len(self._board[i]) and
-                    self._board[i][j] in (Cell.MINE, Cell.MINE_FLAGGED)):
-                    num_mines_surrounding += 1
+        num_mines_surrounding = self._get_num_mines_surrounding(row, col)
         self._board[row][col] = Cell(num_mines_surrounding)
 
     def _get_neighbours(self, row: int, col: int) -> List[Tuple[int, int]]:
@@ -122,6 +116,54 @@ class Board:
             mine = choice(tuple(options))
             options.remove(mine)
             self._board[mine[0]][mine[1]] = Cell.MINE
+
+    def board_3bv(self) -> int:
+        cells_with_zero_mines = self._get_cells_with_zero_mines()
+        result = self._get_num_empty_cell_islands(cells_with_zero_mines)
+        for i, row in enumerate(self._board):
+            for j, cell in enumerate(row):
+                if cell not in (Cell.MINE, Cell.MINE_FLAGGED) and \
+                    set(self._get_neighbours(i, j)).intersection(cells_with_zero_mines) == set():
+                    result += 1
+        return result
+
+    def _get_cells_with_zero_mines(self) -> Set:
+        cells_with_zero_mines = set()
+        for i, row in enumerate(self._board):
+            for j in range(len(row)):
+                if self._get_num_mines_surrounding(i, j) == 0:
+                    cells_with_zero_mines.add((i, j))
+        return cells_with_zero_mines
+
+    def _get_num_empty_cell_islands(self, cells_with_zero_mines: Set) -> int:
+        visited = set()
+        result = 0
+        for i, row in enumerate(self._board):
+            for j, cell in enumerate(row):
+                if (i, j) not in visited and \
+                    (i, j) in cells_with_zero_mines:
+                    self._traverse_empty_cell_island(i, j, visited, cells_with_zero_mines)
+                    result += 1
+        return result
+
+    def _traverse_empty_cell_island(self, row: int, col: int, visited: Set, cells_with_zero_mines: Set):
+        visited.add((row, col))
+        for x, y in self._get_neighbours(row, col):
+            if (x, y) not in visited and (x, y) in cells_with_zero_mines:
+                self._traverse_empty_cell_island(x, y, visited, cells_with_zero_mines)
+
+    def _get_num_mines_surrounding(self, row: int, col: int) -> int:
+        return self._get_num_cells_of_types_surrounding(row, col, [Cell.MINE, Cell.MINE_FLAGGED])
+
+    def _get_num_cells_of_types_surrounding(self, row: int, col: int, types: List[Cell]) -> int:
+        num_cells_of_types_surrounding = 0
+        for i in range(row-1, row+2):
+            for j in range(col-1, col+2):
+                if (0 <= i < len(self._board) and
+                    0 <= j < len(self._board[i]) and
+                    self._board[i][j] in types):
+                    num_cells_of_types_surrounding += 1
+        return num_cells_of_types_surrounding
 
     def __str__(self):
         result = []

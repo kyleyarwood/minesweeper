@@ -198,7 +198,7 @@ class App(QWidget):
     def display_win(self):
         t = round(self.board.total_time(), 2)
         win_alert = QMessageBox(self.window)
-        win_alert.setText("You've won! " + str(t))
+        win_alert.setText("You've won! Time: " + str(t) + ", 3BV: " + str(self.board.board_3bv()))
         mode = str((self.rows, self.cols, self.num_mines))
         if mode not in self.stats:
             self.add_mode(mode)
