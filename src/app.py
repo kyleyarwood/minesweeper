@@ -9,7 +9,7 @@ from math import floor
 
 class App(QWidget):
     def __init__(self, rows, cols, num_mines, stats):
-        self.WINDOW_BAR_HEIGHT = 23
+        self.WINDOW_BAR_HEIGHT = 31
         self.WINDOW_WIDTH = 8
         super().__init__()
         self.game_over = False
@@ -211,7 +211,7 @@ class App(QWidget):
                 self.stats[mode]['current_win_streak'])
         self.write_stats()
         if t == min(self.stats[mode]['times']):
-            win_alert.setText("You've won! NEW HI SCORE! " + str(t))
+            win_alert.setText("You've won! NEW HI SCORE! " + str(t) + ", 3BV: " + str(self.board.board_3bv()))
         win_alert.exec_()
 
     def add_mode(self, mode: str):
@@ -224,7 +224,7 @@ class App(QWidget):
 
     def display_game_over(self):
         game_over_alert = QMessageBox(self.window)
-        game_over_alert.setText("You've lost!")
+        game_over_alert.setText("You've lost! 3BV: " + str(self.board.board_3bv()))
         mode = self.get_mode()
         if mode not in self.stats:
             self.add_mode(mode)
